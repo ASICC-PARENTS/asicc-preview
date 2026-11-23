@@ -40,6 +40,6 @@ for lang in ['', 'ko/', 'fr/']:
     target.write_text(f"""<!doctype html><html lang="{lang[:2] or 'ko'}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>ASICC 미리보기</title>
 <style>body{{font:17px system-ui;line-height:1.7;margin:40px auto;padding:0 16px;max-width:780px}}nav{{display:grid;gap:12px}}a{{color:#723346}}</style>
 <h1>ASICC 개발 미리보기</h1><p>{ref} · <code>{commit}</code> · 예시 데이터만 사용합니다.</p>
-<nav><a href="{prefix}bazaar/admin/">바자회 관리자</a><a href="{base}table.html">엑셀형 상품 편집 시안</a>
+<nav><a href="{prefix}bazaar/admin/">바자회 관리자</a><a href="{base}table.html">관리자 구조 시안 · 기본 상품 / 행사 / 주문·정산</a>
 <a href="{base}ko/bazaar/?event=bazaar-preview-demo">바자회 배너 · 한국어</a><a href="{base}fr/bazaar/?event=bazaar-preview-demo">Bazar · Français</a>
 <a href="{prefix}bazaar/?event=bazaar-preview-closed">종료된 행사 / Vente terminée</a></nav></html>""")

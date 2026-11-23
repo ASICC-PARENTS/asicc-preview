@@ -42,5 +42,5 @@ export async function adminAction(data:any) {
  }
 }
 export async function getShop(id:string){const event=id===closed.eventId?closed:active;return {serverNow:now(),event,products:event.status==='closed'?[]:items.map(p=>({...p,priceCents:p.retailCents,stockRemaining:20}))};}
-export async function createOrder(){return {id:order.id,token:'demo',orderRef:order.orderRef,totalCents:order.totalCents,iban:active.iban,beneficiary:active.beneficiary};}
-export async function buyerAction(){return {order};}
+export async function createOrder(data:any){sessionStorage.setItem('asicc-preview-note',String(data.pickupNote||'').slice(0,500));return {id:order.id,token:'demo',orderRef:order.orderRef,totalCents:order.totalCents,iban:active.iban,beneficiary:active.beneficiary};}
+export async function buyerAction(){return {order:{...order,pickupNote:sessionStorage.getItem('asicc-preview-note')||''}};}

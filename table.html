@@ -1,18 +1,142 @@
 <!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ASICC · PC 상품 편집 시안</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#fbfaf6;color:#2c2928;font:15px system-ui,sans-serif}header{border-bottom:1px solid #e7e2db;background:white;padding:17px 34px;font-weight:700}main{max-width:1390px;margin:26px auto;padding:0 24px}h1{margin:8px 0 4px;font-size:28px}p{margin:8px 0;color:#665b57}.panel{background:white;border:1px solid #ddd5cd;border-radius:12px;padding:18px;margin-top:20px}.bar{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:12px}.bar h2{margin:0;font-size:20px}.sheet{overflow:auto;max-height:64vh;border:1px solid #dfd9d4;border-radius:6px}table{border-spacing:0;min-width:1480px;width:100%;table-layout:fixed}th{position:sticky;top:0;z-index:2;background:#f1e9e7;text-align:left;color:#543943}th,td{border-right:1px solid #e9e3de;border-bottom:1px solid #e9e3de;padding:6px 8px;height:37px}tbody tr:nth-child(even){background:#faf8f7}tbody tr:nth-child(odd){background:white}tr:hover{background:#f6f0ee!important}.fixed{position:sticky;left:0;background:inherit;z-index:1}th.fixed{background:#f1e9e7;z-index:3}input:not([type=checkbox]),textarea{font:inherit;width:100%;border:1px solid transparent;background:transparent;padding:4px;min-width:0}input:focus,textarea:focus{outline:2px solid #87344d;border-radius:3px}input[type=checkbox]{accent-color:#87344d}button{font:inherit;border:1px solid #dfd0d3;background:#fff;border-radius:6px;padding:5px 9px;color:#76344a;cursor:pointer}.primary{background:#87344d;color:white;border-color:#87344d}.description{width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:left}.photo{display:flex;gap:6px;align-items:center}.photo img{width:25px;height:23px;object-fit:cover;border-radius:3px}dialog{width:min(570px,90vw);padding:22px;border:1px solid #d9c6cc;border-radius:10px}dialog::backdrop{background:#24161e55}textarea{border:1px solid #ccbbc1;margin:10px 0}.actions{display:flex;gap:8px;margin-top:14px}
+
+[hidden]{display:none!important} nav,.actions{display:flex;gap:8px;flex-wrap:wrap} nav button[aria-pressed=true]{background:#87344d;color:#fff}.donereport table{min-width:680px;table-layout:auto}.donereport tfoot th{position:static}.paid{color:#295749}.mobile{display:none}.mobile label{display:block;margin:10px 0}.mobile input,.mobile textarea{border:1px solid #ddd}.mobile select{width:100%;padding:7px}.panel input[type=text]{border-color:#ddd}
+@media(max-width:700px){main{padding:0 10px}.bar{flex-wrap:wrap}.desktop{display:none}.mobile{display:block}.panel{padding:12px}}
 </style>
-<header>ASICC　 ·　 온라인 바자회 관리</header><main>
-<p><a href="/">캡처 목록</a> · 디자인 검토용 시안</p>
-<h1>새 바자회 · 상품 편집</h1><p>예시 상품 24개 · 한국어와 프랑스어를 각각 직접 입력</p>
-<section class="panel"><div class="bar"><div><h2>이번 바자회 상품</h2><p>이름·가격·수량은 셀에서 수정하고, 설명과 사진은 셀을 눌러 편집합니다.</p></div><button id="add">+ 상품 추가</button></div>
-<div class="sheet" tabindex="0" aria-label="상품 편집 표. 오른쪽으로 스크롤하면 추가 열이 표시됩니다."><table><colgroup><col style="width:74px"><col style="width:160px"><col style="width:165px"><col style="width:188px"><col style="width:188px"><col style="width:112px"><col style="width:101px"><col style="width:104px"><col style="width:104px"><col style="width:112px"><col style="width:172px"></colgroup>
-<thead><tr><th class="fixed">판매 포함</th><th>상품명 · 한국어</th><th>상품명 · 프랑스어</th><th>설명 · 한국어</th><th>설명 · 프랑스어</th><th>박스 매입가 €</th><th>판매가 €</th><th>박스당 수량</th><th>사진</th><th>공급업체</th><th>보관·판매 한도</th></tr></thead><tbody></tbody></table></div>
-<div class="actions"><button class="primary" id="save">임시저장</button><button disabled>발행</button><button disabled>임시저장 삭제</button><span id="status" role="status"></span></div></section>
-<dialog><form method="dialog"><h2 id="detailTitle">설명 편집</h2><textarea aria-label="상품 설명" rows="6"></textarea><div id="photoEdit" hidden><img src="sample.jpg" width="150" alt="예시 상품 사진"><p><label>사진 파일 선택 <input type="file" accept="image/*"></label></p></div><button value="cancel">취소</button> <button class="primary" value="confirm">셀에 적용</button></form></dialog>
+<header>ASICC · 온라인 바자회 관리</header><main>
+<p><a href="/">미리보기 홈</a> · 디자인 검토용 시안 · 예시 데이터만 사용</p>
+<nav aria-label="관리 화면 선택"><button data-page="catalog">기본 상품 목록</button><button data-page="event">새 바자회 만들기</button><button data-page="orders">주문·정산</button></nav>
+<h1 id="title"></h1><p id="hint"></p>
+<section class="panel" id="editor">
+<label id="eventName">행사명 <input id="name" type="text"></label>
+<div class="bar"><h2>상품</h2><button id="add">+ 상품 추가</button></div>
+<div class="sheet desktop" tabindex="0" aria-label="가로 스크롤 상품 편집표"><table><thead id="head"></thead><tbody id="body"></tbody></table></div>
+<div id="mobile" class="mobile"></div>
+<div class="actions" id="actions"></div>
+</section>
+<section id="reports" class="donereport" hidden>
+<section class="panel"><h2>주문자별 입금</h2><div class="sheet" id="payments"></div></section>
+<section class="panel"><h2>상품별 주문 집계</h2><div class="sheet" id="products"></div></section>
+<section class="panel"><h2>업체별 발주 집계</h2><p>상품별 주문량을 박스당 수량으로 나눠 올림합니다. 예를 들어 17개 주문에 박스당 12개이면 2박스를 발주합니다. 매입액은 발주 박스 수 × 박스 매입가 TTC입니다.</p><div class="sheet" id="vendors"></div></section>
+</section>
+<p role="status" id="status"></p>
+<dialog id="detail"><form method="dialog"><h2 id="detailTitle"></h2><textarea aria-label="상품 설명" rows="6"></textarea><div id="photoEdit" hidden><img width="150" alt="상품 사진"><p><label>예시 사진 교체 <input type="file" accept="image/*"></label></p></div><button value="cancel">취소</button> <button class="primary" value="confirm">셀에 적용</button></form></dialog>
 <script>
-const products=[['사과','Pommes'],['쌀','Riz'],['국수','Nouilles'],['김치','Kimchi'],['배','Poires'],['감자','Pommes de terre'],['보리차','Thé d’orge'],['참기름','Huile de sésame']];const tbody=document.querySelector('tbody'),dialog=document.querySelector('dialog'),area=dialog.querySelector('textarea');let target;
-function add(i){const row=tbody.insertRow(),item=products[i%products.length];row.innerHTML='<td class="fixed"><label><input type="checkbox" checked> 포함</label></td>';
-for(const [label,value,type] of [['한국어 상품명',item[0]+' '+(i+1),'text'],['프랑스어 상품명',item[1]+' '+(i+1),'text'],['한국어 설명','예시 상품의 원산지와 구성 안내','detail'],['프랑스어 설명','Origine et composition du produit','detail'],['박스 매입가',14+i,'number'],['판매가',4+i/4,'number'],['박스당 수량',12,'number'],['사진','사진','photo'],['공급업체','예시 공급처','text'],['보관 및 판매 한도','상온 · 20개','text']]){const cell=row.insertCell();const el=document.createElement(['detail','photo'].includes(type)?'button':'input');el.setAttribute('aria-label',label);if(type==='detail'||type==='photo'){el.className=type==='detail'?'description':'photo';if(type==='photo'){const image=new Image();image.src='sample.jpg';image.alt='';el.append(image);}el.append(document.createTextNode(value));el.onclick=()=>{target=type==='detail'?el:null;detailTitle.textContent=item[0]+' · '+label;area.hidden=type!=='detail';photoEdit.hidden=type!=='photo';area.value=type==='detail'?el.textContent:'';dialog.showModal();};}else{el.type=type;el.value=value;if(type==='number')el.step='any';}cell.append(el);}}
-for(let i=0;i<24;i++)add(i);document.querySelector('#add').onclick=()=>{add(tbody.rows.length);tbody.rows[tbody.rows.length-1].scrollIntoView({block:'nearest'});};dialog.addEventListener('close',()=>{if(dialog.returnValue==='confirm'&&target)target.textContent=area.value;});save.onclick=()=>{status.textContent='시안에서만 표시되는 저장 상태입니다.';};
+const by=id=>document.getElementById(id);
+const eur=c=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(c/100);
+const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const names=[['사과','Pommes'],['쌀','Riz'],['국수','Nouilles'],['김치','Kimchi'],['배','Poires'],['감자','Pommes de terre']];
+let nextId=0;
+const newItem=(i=0)=>({id:"demo-"+(++nextId),included:true,ko:i?names[(i-1)%6][0]+' '+i:'',fr:i?names[(i-1)%6][1]+' '+i:'',dk:i?'예시 원산지와 구성입니다.':'',df:i?'Origine et composition.':'',vendor:i%2?'한빛 식품':'두레 유통',cost:14+i,price:4+i/4,pack:12,storage:'상온',photo:i?'sample.jpg':''});
+let catalog=Array.from({length:24},(_,i)=>newItem(i+1)),catalogEdits=structuredClone(catalog);
+let event=null,savedEvent=null, pastEvent={name:'지난 예시 바자회',items:structuredClone(catalog),status:'closed'}, mode='catalog', selected=0, currentDetail;
+const sampleOrders=[
+ {id:'EX-001',name:'예시 주문자 A',paid:false,note:'17시에 찾으러 가겠습니다.
+수령자는 가족입니다.',lines:[[0,17],[1,2]]},
+ {id:'EX-002',name:'예시 주문자 B',paid:true,lines:[[0,3],[2,13]]},
+ {id:'EX-003',name:'예시 주문자 C',paid:false,lines:[[1,5],[3,6]]}
+];
+const orderItems=structuredClone(catalog);
+const fields=[['ko','상품명 · 한국어'],['fr','상품명 · 프랑스어'],['dk','설명 · 한국어','detail'],['df','설명 · 프랑스어','detail'],['vendor','공급업체'],['cost','박스 매입가 TTC €','number'],['price','판매가 €','number'],['pack','박스당 수량','number'],['storage','보관 방법'],['photo','사진','photo']];
+const list=()=>mode==='catalog'?catalogEdits:event.items;
+const orderTotal=o=>o.lines.reduce((total,[i,qty])=>total+qty*Math.round(orderItems[i].price*100),0);
+function action(text,fn,primary=false){const button=document.createElement('button');button.textContent=text;if(primary)button.className='primary';button.onclick=fn;by('actions').append(button);}
+function details(item,key,label,type){
+ currentDetail={item,key,type};const box=by('detail');box.returnValue='';by('detailTitle').textContent=(item.ko||'새 상품')+' · '+label;
+ const area=box.querySelector('textarea');area.hidden=type==='photo';area.value=type==='detail'?item[key]:'';
+ by('photoEdit').hidden=type!=='photo';const img=by('photoEdit').querySelector('img');img.src=item.photo||'sample.jpg';
+ by('photoEdit').querySelector('input').value='';box.showModal();
+}
+by('detail').addEventListener('close',async()=>{
+ if(by('detail').returnValue!=='confirm'||(mode==='event'&&event.status==='closed'))return;
+ const {item,key,type}=currentDetail;
+ if(type==='detail')item[key]=by('detail').querySelector('textarea').value;
+ else{const file=by('photoEdit').querySelector('input').files[0];if(file)item.photo=URL.createObjectURL(file);}
+ drawProducts();
+});
+function field(item,[key,label,type]){
+ const el=document.createElement(type==='detail'||type==='photo'?'button':'input');el.setAttribute('aria-label',label);
+ if(type==='detail'||type==='photo'){
+  el.className=type==='detail'?'description':'photo';el.textContent=type==='detail'?(item[key]||'설명 입력'):'사진 편집';
+  if(type==='photo'&&item.photo){const img=new Image();img.src=item.photo;img.alt='';el.prepend(img);}
+  el.onclick=()=>details(item,key,label,type);
+ }else{el.type=type||'text';if(type==='number'){el.min='0';el.step=key==='pack'?'1':'0.01';}el.value=item[key];el.oninput=()=>item[key]=type==='number'?Number(el.value):el.value;}
+ return el;
+}
+function include(item){
+ const el=document.createElement('input');el.type='checkbox';el.checked=item.included;el.setAttribute('aria-label',(item.ko||'새 상품')+' 판매 포함');el.onchange=()=>item.included=el.checked;return el;
+}
+function drawProducts(){
+ const items=list(), columns=mode==='event'?[['included','판매 포함'],...fields]:fields;
+ by('head').innerHTML='<tr>'+columns.map(([,label])=>'<th scope="col">'+label+'</th>').join('')+'</tr>';
+ by('body').replaceChildren();
+ for(const item of items){const row=by('body').insertRow();for(const col of columns)row.insertCell().append(col[0]==='included'?include(item):field(item,col));}
+ const mobile=by('mobile');mobile.replaceChildren();
+ if(!items.length)return;
+ selected=Math.min(selected,items.length-1);
+ const picker=document.createElement('select');picker.setAttribute('aria-label','편집할 상품');
+ items.forEach((item,i)=>picker.add(new Option(item.ko||'새 상품',i,i===selected,i===selected)));
+ picker.onchange=()=>{selected=Number(picker.value);drawProducts();};mobile.append(picker);
+ const item=items[selected];
+ for(const col of columns){const label=document.createElement('label');label.textContent=col[1];label.append(col[0]==='included'?include(item):field(item,col));mobile.append(label);}
+}
+function table(headers,rows,footer=[]){
+ const cells=row=>row.map(x=>'<td>'+x+'</td>').join('');
+ return '<table><thead><tr>'+headers.map(x=>'<th scope="col">'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+cells(row)+'</tr>').join('')+'</tbody>'+(footer.length?'<tfoot><tr>'+footer.map(x=>'<th>'+x+'</th>').join('')+'</tr></tfoot>':'')+'</table>';
+}
+function drawReports(){
+ by('payments').innerHTML=table(['주문번호','주문자','주문 총액','입금','수령 비고'],sampleOrders.map((o,i)=>[o.id,o.name,eur(orderTotal(o)),o.paid?'<span class="paid">입금 확인</span>':'<button data-pay="'+i+'">입금 확인 처리</button>',o.note?'<span style="white-space:pre-wrap">'+escapeHtml(o.note)+'</span>':'']));
+ by('payments').querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{if(confirm('이 예시 주문의 전체 금액을 입금 확인 처리할까요?')){sampleOrders[b.dataset.pay].paid=true;drawReports();}});
+ const counts=new Map();
+ sampleOrders.forEach(o=>o.lines.forEach(([i,qty])=>counts.set(i,(counts.get(i)||0)+qty)));
+ const rows=[],vendors=new Map();
+ for(const [i,qty] of counts){
+  const p=orderItems[i], boxes=Math.ceil(qty/p.pack), cost=boxes*Math.round(p.cost*100), revenue=qty*Math.round(p.price*100);
+  rows.push([escapeHtml(p.ko),escapeHtml(p.vendor),qty,eur(revenue)]);
+  const subtotal=vendors.get(p.vendor)||[0,0,0,0];[qty,boxes,cost,revenue].forEach((x,j)=>subtotal[j]+=x);vendors.set(p.vendor,subtotal);
+ }
+ by('products').innerHTML=table(['상품','공급업체','주문 수량','판매금액'],rows);
+ const totals=[0,0,0,0];const format=([qty,boxes,cost,sales])=>[qty,boxes,eur(cost),eur(sales),eur(sales-cost)];
+ by('vendors').innerHTML=table(['업체','총 주문 수량','발주 박스 수','총 매입 TTC','총 판매금액','예상 매출총이익'],[...vendors].map(([name,subtotal])=>{subtotal.forEach((x,i)=>totals[i]+=x);return [escapeHtml(name)+' 소계',...format(subtotal)];}),['전체 합계',...format(totals)]);
+}
+function render(next){
+ mode=next;by('status').textContent='';document.querySelectorAll('[data-page]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.page===mode));
+ by('editor').hidden=mode==='orders';by('reports').hidden=mode!=='orders';
+ by('title').textContent={catalog:'기본 상품 목록',event:'새 바자회 · 행사별 상품 편집',orders:'주문·정산'}[mode];
+ by('hint').textContent={catalog:'상품 기본값을 수정합니다. 기존 행사에는 적용되지 않습니다.',event:'기본 상품 목록에서 복사한 예시 상품을 편집합니다.',orders:'입금은 주문자별로 확인하고, 발주는 업체별로 집계합니다.'}[mode];
+ if(mode==='orders'){drawReports();return;}
+ by('eventName').hidden=mode!=='event';
+ if(mode==='event'){event??={name:'겨울 예시 바자회',items:structuredClone(catalog),status:'draft'};by('name').value=event.name;by('hint').textContent=event.name+' · '+({draft:'초안',published:'발행됨',closed:'종료 · 읽기 전용'}[event.status]);}
+ selected=0;drawProducts();by('actions').replaceChildren();
+ by('name').disabled=mode==='event'&&event.status==='closed';by('add').disabled=by('name').disabled;
+ if(mode==='event'&&event.status==='closed'){
+  for(const input of by('editor').querySelectorAll('.sheet input,.mobile input'))input.disabled=true;
+  action('새 행사 만들기',()=>{event=null;savedEvent=null;render('event');});
+  return;
+ }
+ if(mode==='catalog'){action('기본 상품 목록 저장',()=>{catalog=structuredClone(catalogEdits);by('status').textContent='예시 기본 목록을 저장했습니다.';},true);}
+ else{
+  action('이번 행사에만 저장',()=>saveEvent(false),true);
+  action('기본 상품 목록에도 반영',()=>{if(confirm('이번 행사 상품 정보를 기본 상품 목록에도 반영할까요? 다른 행사의 기록은 그대로입니다.'))saveEvent(true);});
+  action('발행',()=>{if(confirm('예시 행사를 발행할까요?')){event.status='published';saveEvent(false);by('status').textContent='예시 행사 발행 완료';}});
+  action('행사 종료',()=>{if(event.status==='published'&&confirm('예시 행사를 종료할까요?')){event.status='closed';saveEvent(false);pastEvent=structuredClone(event);render('event');by('status').textContent='예시 행사 종료 완료';}else if(event.status!=='published')by('status').textContent='발행된 행사에서 사용할 수 있습니다.';});
+  action('초안 삭제',()=>{if(event.status==='draft'&&confirm('예시 초안을 삭제할까요?')){event=null;savedEvent=null;render('catalog');by('status').textContent='예시 초안을 삭제했습니다.';}});
+  action('지난 행사 보기',()=>{event=structuredClone(pastEvent);render('event');});
+  action('저장된 초안 불러오기',()=>{if(savedEvent){event=structuredClone(savedEvent);render('event');}else by('status').textContent='저장한 초안이 없습니다.';});
+ }
+}
+function saveEvent(updateCatalog){
+ event.name=by('name').value.trim()||'이름 없는 바자회';savedEvent=structuredClone(event);
+ if(updateCatalog){
+  const updates=new Map(event.items.map(({included,...item})=>[item.id,{...item,included:true}]));
+  catalog=catalog.map(item=>{const update=updates.get(item.id);updates.delete(item.id);return update||item;});
+  catalog.push(...updates.values());catalogEdits=structuredClone(catalog);
+ }
+ by('status').textContent=updateCatalog?'예시 행사와 기본 목록에 저장했습니다.':'이번 예시 행사에만 저장했습니다.';
+}
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>render(b.dataset.page));
+by('add').onclick=()=>{list().push(newItem());selected=list().length-1;drawProducts();const row=by('body').lastElementChild;row?.scrollIntoView({block:'nearest'});};
+const initial=location.hash.slice(1);render(['catalog','event','orders'].includes(initial)?initial:'catalog');
 </script></main></html>
