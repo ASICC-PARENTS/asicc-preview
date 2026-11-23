@@ -39,6 +39,14 @@ dashboard=dashboard.replace('<meta charset="utf-8">','<meta charset="utf-8"><met
 shutil.copy(tools/'dashboard.js',root/'public/dashboard.js')
 shutil.copytree(tools/'export',root/'public/export')
 
+for locale in ('ko','fr'):
+    target=root/'public'/locale/'bazaar/admin'
+    shutil.copytree(tools/'handoff',target)
+    for page in target.glob('*.html'):
+        page.write_text(page.read_text().replace('승인 디자인 시안','승인 디자인 시안 · '+ref+' · '+commit)
+                        .replace('href="index.html"',f'href="{base}{locale}/bazaar/admin/"'))
+    # The approved HTML owns these URLs in preview only.
+    (routes/'[lang]/bazaar/admin.astro').unlink(missing_ok=True)
 for lang in ['', 'ko/', 'fr/']:
     target=routes/lang/'index.astro'
     target.parent.mkdir(parents=True,exist_ok=True)
@@ -46,8 +54,8 @@ for lang in ['', 'ko/', 'fr/']:
     target.write_text(f"""<!doctype html><html lang="{lang[:2] or 'ko'}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>ASICC 미리보기</title>
 <style>body{{font:17px system-ui;line-height:1.7;margin:40px auto;padding:0 16px;max-width:780px}}nav{{display:grid;gap:12px}}a{{color:#723346}}</style>
 <h1>ASICC 개발 미리보기</h1><p>{ref} · <code>{commit}</code> · 예시 데이터만 사용합니다.</p>
-<nav><a href="{base}dashboard.html">새 바자회 관리자 업무 시안</a>
-<a href="{prefix}bazaar/admin/">바자회 관리자</a><a href="{base}table.html">관리자 구조 시안 · 기본 상품 / 행사 / 주문·정산</a>
+<nav><a href="{base}dashboard.html">이전 관리자 시안</a>
+<a href="{prefix}bazaar/admin/">승인 디자인 · 바자회 관리자</a><a href="{base}table.html">관리자 구조 시안 · 기본 상품 / 행사 / 주문·정산</a>
 <a href="{base}table.html#orders">업체별 발주 집계 시안 바로 보기</a>
 <a href="{base}ko/bazaar/?event=bazaar-preview-demo">바자회 배너 · 한국어</a><a href="{base}fr/bazaar/?event=bazaar-preview-demo">Bazar · Français</a>
 <a href="{prefix}bazaar/?event=bazaar-preview-closed">종료된 행사 / Vente terminée</a></nav></html>""")
