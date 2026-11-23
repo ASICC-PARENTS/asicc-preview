@@ -11,7 +11,9 @@
 <h1 id="title"></h1><p id="hint"></p>
 <section class="panel" id="editor">
 <label id="eventName">행사명 <input id="name" type="text"></label>
-<div class="bar"><h2>상품</h2><button id="add">+ 상품 추가</button></div>
+<div class="bar"><h2>상품</h2><div class="actions"><button id="add">+ 상품 추가</button></div></div>
+<div id="bulk" class="actions" hidden><button id="selectAll">전체 선택</button><button id="clearAll">전체 해제</button><span id="includedCount" aria-live="polite"></span></div>
+<p>수익률은 낱개 판매가에서 낱개 매입가(박스 매입가 TTC ÷ 박스당 수량)를 뺀 금액을 판매가로 나눈 비율입니다. 수익률을 직접 입력하면 판매가를 자동으로 계산합니다.</p>
 <div class="sheet desktop" tabindex="0" aria-label="가로 스크롤 상품 편집표"><table><thead id="head"></thead><tbody id="body"></tbody></table></div>
 <div id="mobile" class="mobile"></div>
 <div class="actions" id="actions"></div>
@@ -38,7 +40,30 @@ const sampleOrders=[
  {id:'EX-003',name:'예시 주문자 C',paid:false,lines:[[1,5],[3,6]]}
 ];
 const orderItems=structuredClone(catalog);
-const fields=[['ko','상품명 · 한국어'],['fr','상품명 · 프랑스어'],['dk','설명 · 한국어','detail'],['df','설명 · 프랑스어','detail'],['vendor','공급업체'],['cost','박스 매입가 TTC €','number'],['price','판매가 €','number'],['pack','박스당 수량','number'],['storage','보관 방법'],['photo','사진','photo']];
+const fields=[
+ ['photo','사진','photo'],['ko','상품명 · 한국어'],['fr','상품명 · 프랑스어'],
+ ['pack','박스당 수량','number'],['cost','박스 매입가 TTC €','number'],['price','판매가 €','number'],
+ ['margin','수익률 %','number'],['storage','보관 방법'],
+ ['dk','설명 · 한국어','detail'],['df','설명 · 프랑스어','detail'],['vendor','공급업체']
+];
+const round2=value=>Math.round((value+Number.EPSILON)*100)/100;
+const unitCost=item=>item.pack>0&&item.cost!==''?item.cost/item.pack:NaN;
+const marginFor=item=>item.price>0&&Number.isFinite(unitCost(item))?round2((1-unitCost(item)/item.price)*100):'';
+function syncPricing(item, key, el){
+ const value=el.valueAsNumber;
+ if(key==='margin'){
+  if(!Number.isFinite(value)||value>=100||!(unitCost(item)>0))return;
+  item.price=round2(unitCost(item)/(1-value/100));
+ }else item[key]=Number.isFinite(value)?value:'';
+ const other=key==='margin'?'price':'margin';
+ document.querySelectorAll('[data-price-item][data-price-field]').forEach(input=>{
+  if(input.dataset.priceItem===item.id&&input.dataset.priceField===other)input.value=other==='price'?item.price:marginFor(item);
+ });
+}
+function updateIncludedCount(){
+ if(mode!=='event')return;
+ by('includedCount').textContent=`판매 포함 ${event.items.filter(item=>item.included).length} / ${event.items.length}`;
+}
 const list=()=>mode==='catalog'?catalogEdits:event.items;
 const orderTotal=o=>o.lines.reduce((total,[i,qty])=>total+qty*Math.round(orderItems[i].price*100),0);
 function action(text,fn,primary=false){const button=document.createElement('button');button.textContent=text;if(primary)button.className='primary';button.onclick=fn;by('actions').append(button);}
@@ -61,17 +86,35 @@ function field(item,[key,label,type]){
   el.className=type==='detail'?'description':'photo';el.textContent=type==='detail'?(item[key]||'설명 입력'):'사진 편집';
   if(type==='photo'&&item.photo){const img=new Image();img.src=item.photo;img.alt='';el.prepend(img);}
   el.onclick=()=>details(item,key,label,type);
- }else{el.type=type||'text';if(type==='number'){el.min='0';el.step=key==='pack'?'1':'0.01';}el.value=item[key];el.oninput=()=>item[key]=type==='number'?Number(el.value):el.value;}
+ }else{
+  el.type=type||'text';
+  if(type==='number'){
+   if(key!=='margin')el.min=key==='pack'?'1':'0';
+   if(key==='margin')el.max='99.99';
+   el.step=key==='pack'?'1':'0.01';
+   el.value=key==='margin'?marginFor(item):item[key];
+   el.dataset.priceItem=item.id;el.dataset.priceField=key;
+   el.oninput=()=>syncPricing(item,key,el);
+   if(key==='margin')el.onchange=()=>{
+    if(el.value!==''&&(!(unitCost(item)>0)||el.valueAsNumber>=100)){
+     by('status').textContent='박스 매입가와 박스당 수량을 먼저 입력하세요. 수익률은 100% 미만이어야 합니다.';
+    }
+    el.value=marginFor(item);
+   };
+  }else{el.value=item[key];el.oninput=()=>item[key]=el.value;}
+ }
  return el;
 }
 function include(item){
- const el=document.createElement('input');el.type='checkbox';el.checked=item.included;el.setAttribute('aria-label',(item.ko||'새 상품')+' 판매 포함');el.onchange=()=>item.included=el.checked;return el;
+ const el=document.createElement('input');el.type='checkbox';el.checked=item.included;el.setAttribute('aria-label',(item.ko||'새 상품')+' 판매 포함');el.dataset.includeItem=item.id;
+ el.onchange=()=>{item.included=el.checked;document.querySelectorAll('[data-include-item]').forEach(input=>{if(input.dataset.includeItem===item.id)input.checked=item.included;});updateIncludedCount();};return el;
 }
 function drawProducts(){
- const items=list(), columns=mode==='event'?[['included','판매 포함'],...fields]:fields;
+ const items=list(), columns=mode==='event'?[fields[0],['included','판매 포함'],...fields.slice(1)]:fields;
  by('head').innerHTML='<tr>'+columns.map(([,label])=>'<th scope="col">'+label+'</th>').join('')+'</tr>';
  by('body').replaceChildren();
  for(const item of items){const row=by('body').insertRow();for(const col of columns)row.insertCell().append(col[0]==='included'?include(item):field(item,col));}
+ updateIncludedCount();
  const mobile=by('mobile');mobile.replaceChildren();
  if(!items.length)return;
  selected=Math.min(selected,items.length-1);
@@ -107,10 +150,12 @@ function render(next){
  by('hint').textContent={catalog:'상품 기본값을 수정합니다. 기존 행사에는 적용되지 않습니다.',event:'기본 상품 목록에서 복사한 예시 상품을 편집합니다.',orders:'입금은 주문자별로 확인하고, 발주는 업체별로 집계합니다.'}[mode];
  if(mode==='orders'){drawReports();return;}
  by('eventName').hidden=mode!=='event';
+ by('bulk').hidden=mode!=='event';
  if(mode==='event'){event??={name:'겨울 예시 바자회',items:structuredClone(catalog),status:'draft'};by('name').value=event.name;by('hint').textContent=event.name+' · '+({draft:'초안',published:'발행됨',closed:'종료 · 읽기 전용'}[event.status]);}
  selected=0;drawProducts();by('actions').replaceChildren();
  by('name').disabled=mode==='event'&&event.status==='closed';by('add').disabled=by('name').disabled;
  if(mode==='event'&&event.status==='closed'){
+  by('bulk').hidden=true;
   for(const input of by('editor').querySelectorAll('.sheet input,.mobile input'))input.disabled=true;
   action('새 행사 만들기',()=>{event=null;savedEvent=null;render('event');});
   return;
@@ -136,6 +181,13 @@ function saveEvent(updateCatalog){
  by('status').textContent=updateCatalog?'예시 행사와 기본 목록에 저장했습니다.':'이번 예시 행사에만 저장했습니다.';
 }
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>render(b.dataset.page));
+function setAllIncluded(included){
+ if(mode!=='event'||event.status==='closed')return;
+ event.items.forEach(item=>item.included=included);
+ drawProducts();
+}
+by('selectAll').onclick=()=>setAllIncluded(true);
+by('clearAll').onclick=()=>setAllIncluded(false);
 by('add').onclick=()=>{list().push(newItem());selected=list().length-1;drawProducts();const row=by('body').lastElementChild;row?.scrollIntoView({block:'nearest'});};
 const initial=location.hash.slice(1);render(['catalog','event','orders'].includes(initial)?initial:'catalog');
 </script></main></html>
