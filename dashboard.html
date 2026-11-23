@@ -1,0 +1,40 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ASICC · 바자회 업무 시안</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fbfaf6;color:#2c2928;font:15px system-ui,sans-serif}header{border-bottom:1px solid #e7e2db;background:white;padding:17px 34px;font-weight:700}main{max-width:1390px;margin:26px auto;padding:0 24px}h1{margin:8px 0 4px;font-size:28px}p{margin:8px 0;color:#665b57}.panel{background:white;border:1px solid #ddd5cd;border-radius:12px;padding:18px;margin-top:20px}.bar{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:12px}.bar h2{margin:0;font-size:20px}.sheet{overflow:auto;max-height:64vh;border:1px solid #dfd9d4;border-radius:6px}table{border-spacing:0;min-width:1480px;width:100%;table-layout:fixed}th{position:sticky;top:0;z-index:2;background:#f1e9e7;text-align:left;color:#543943}th,td{border-right:1px solid #e9e3de;border-bottom:1px solid #e9e3de;padding:6px 8px;height:37px}tbody tr:nth-child(even){background:#faf8f7}tbody tr:nth-child(odd){background:white}tr:hover{background:#f6f0ee!important}.fixed{position:sticky;left:0;background:inherit;z-index:1}th.fixed{background:#f1e9e7;z-index:3}input:not([type=checkbox]),textarea{font:inherit;width:100%;border:1px solid transparent;background:transparent;padding:4px;min-width:0}input:focus,textarea:focus{outline:2px solid #87344d;border-radius:3px}input[type=checkbox]{accent-color:#87344d}button{font:inherit;border:1px solid #dfd0d3;background:#fff;border-radius:6px;padding:5px 9px;color:#76344a;cursor:pointer}.primary{background:#87344d;color:white;border-color:#87344d}.description{width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:left}.photo{display:flex;gap:6px;align-items:center}.photo img{width:25px;height:23px;object-fit:cover;border-radius:3px}dialog{width:min(570px,90vw);padding:22px;border:1px solid #d9c6cc;border-radius:10px}dialog::backdrop{background:#24161e55}textarea{border:1px solid #ccbbc1;margin:10px 0}.actions{display:flex;gap:8px;margin-top:14px}
+
+[hidden]{display:none!important} nav,.actions{display:flex;gap:8px;flex-wrap:wrap} nav button[aria-pressed=true]{background:#87344d;color:#fff}.donereport table{min-width:680px;table-layout:auto}.donereport tfoot th{position:static}.paid{color:#295749}.mobile{display:none}.mobile label{display:block;margin:10px 0}.mobile input,.mobile textarea{border:1px solid #ddd}.mobile select{width:100%;padding:7px}.panel input[type=text]{border-color:#ddd}
+@media(max-width:700px){main{padding:0 10px}.bar{flex-wrap:wrap}.desktop{display:none}.mobile{display:block}.panel{padding:12px}}
+
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.summary div{padding:12px;background:#f7f1ee;border-radius:8px}.summary strong{display:block;font-size:22px}.badge{display:inline-block;padding:4px 9px;background:#e9eddf;color:#3c5333;border-radius:16px;font-size:14px}.top-actions{margin:12px 0}#tabs{margin-top:16px}#orderList details,#purchase details{border-bottom:1px solid #e9e3de;padding:12px 0}summary{cursor:pointer;font-weight:650}.filters{display:flex;gap:8px;flex-wrap:wrap}.filters input:not([type=checkbox]){width:250px;border-color:#ddd}.filters select,select{max-width:100%;font:inherit;padding:6px}.note{white-space:pre-wrap;overflow-wrap:anywhere}.form-row{display:grid;gap:10px;grid-template-columns:1fr 1fr;margin:10px 0}.form-row label{display:block}.form-row input:not([type=checkbox]){border-color:#ddd}.form-row textarea{margin:0}.donereport td input[type=number]{border-color:#ddd;width:80px}.donereport th,.donereport td{vertical-align:top}.top-actions a{align-self:center}.purchase-total{font-weight:700}.report-table{margin-top:9px}
+@media(max-width:700px){.summary{grid-template-columns:repeat(2,1fr)}.summary strong{font-size:18px}.form-row{grid-template-columns:1fr}.report-table{overflow:visible;max-height:none;border:none}.report-table table{display:block;min-width:0!important}.report-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.report-table tbody,.report-table tfoot{display:block}.report-table tr{display:block;border:1px solid #e9e3de;border-radius:7px;margin:9px 0}.report-table td,.report-table tfoot th{width:100%;height:auto;display:grid;grid-template-columns:minmax(105px,1fr) minmax(0,1fr);gap:8px;background:transparent;border-right:0}.report-table td:before,.report-table tfoot th:before{content:attr(data-label);font-weight:650;color:#634555}.report-table td input{max-width:100%}}
+</style>
+<header>ASICC · 온라인 바자회 관리</header><main>
+<p><a href="/asicc-preview/">미리보기 홈</a> · 디자인 검토용 시안 · 예시 데이터만 사용</p>
+<section class="panel" aria-label="바자회 관리 메인">
+<div class="bar"><div><h1 id="title"></h1><span id="eventStatus" class="badge"></span></div><div class="actions top-actions"><button id="pastButton">지난 바자회 보기</button><button id="newEvent">새 바자회 만들기</button></div></div>
+<div id="pastPicker" class="actions" hidden><button id="prev" aria-label="이전 회차">← 이전</button><select id="pastSelect" aria-label="지난 바자회 회차"></select><button id="next" aria-label="다음 회차">다음 →</button><button id="backCurrent">현재 바자회로</button></div>
+<div id="drafts" class="actions"><button id="resume">준비 중인 바자회 재개</button></div>
+<div id="summary" class="summary"></div>
+<nav id="tabs" aria-label="바자회 업무"><button data-tab="products">제품관리</button><button data-tab="orders">주문관리</button><button data-tab="settlement">정산관리</button></nav>
+</section>
+<section class="panel" id="editor">
+<label id="eventName">행사명 <input id="name" type="text"></label>
+<div class="bar"><h2>상품</h2><div class="actions"><button id="add">+ 상품 추가</button></div></div>
+<div id="bulk" class="actions" hidden><button id="selectAll">전체 선택</button><button id="clearAll">전체 해제</button><span id="includedCount" aria-live="polite"></span></div>
+<p>이 행사에서 바꾼 상품은 기본 목록에 반영되지 않습니다. 수익률은 낱개 판매가에서 낱개 매입가(박스 매입가 TTC ÷ 박스당 수량)를 뺀 금액을 판매가로 나눈 비율입니다. 수익률을 직접 입력하면 판매가를 자동으로 계산합니다.</p>
+<div class="sheet desktop" tabindex="0" aria-label="가로 스크롤 상품 편집표"><table><thead id="head"></thead><tbody id="body"></tbody></table></div>
+<div id="mobile" class="mobile"></div>
+<div class="actions" id="actions"></div>
+</section>
+
+<section id="orders" class="panel" hidden><h2>주문자별 관리</h2>
+<div class="filters"><input id="query" type="search" placeholder="주문번호·주문자·비고 검색" aria-label="주문 검색"><select id="filter" aria-label="주문 상태"><option value="all">전체 상태</option><option value="paid">입금 확인</option><option value="reported">송금 신고 · 확인 대기</option><option value="pending">미입금 · 미신고</option><option value="canceled">취소</option></select></div>
+<div id="orderList"></div></section>
+<section id="settlement" class="donereport" hidden>
+<section class="panel"><h2>상품별 주문 집계</h2><p>취소된 주문을 제외한 주문 수량과 판매금액입니다.</p><div class="sheet report-table" id="sales"></div></section>
+<section class="panel"><h2>공급업체별 발주 집계</h2><p>주문 수량과 판매금액은 취소를 제외한 전체 주문입니다. 발주 박스와 매입 TTC는 입금 확인 주문과 수동 조정 수량을 기준으로 합니다. 예상 매출총이익은 입금 확인 판매금액에서 발주 매입 TTC를 뺀 값입니다.</p><div class="sheet report-table" id="vendors"></div></section>
+<section class="panel"><h2>공급업체별 구매발주서</h2><p>발주 박스 수는 입금 확인 수량을 박스당 수량으로 나눠 올림합니다. 조정한 박스 수와 납품 정보가 다운로드에 반영됩니다.</p><div class="actions"><button id="allPdf">전체 업체 PDF</button><button id="allExcel">전체 업체 Excel</button></div><div id="purchase"></div></section>
+</section>
+<p id="status" role="status"></p>
+<dialog id="detail"><form method="dialog"><h2 id="detailTitle"></h2><textarea aria-label="상품 설명" rows="6"></textarea><div id="photoEdit" hidden><img width="150" alt="상품 사진"><p><label>예시 사진 교체 <input type="file" accept="image/*"></label></p></div><button value="cancel">취소</button> <button class="primary" value="confirm">셀에 적용</button></form></dialog>
+<script src="export/xlsx.js"></script><script src="export/pdf.js"></script><script src="dashboard.js"></script></main></html>

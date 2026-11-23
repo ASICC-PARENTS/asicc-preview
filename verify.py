@@ -1,7 +1,7 @@
 import re,sys
 from pathlib import Path
 root=Path(sys.argv[1])
-required=['index.html','ko/bazaar/index.html','fr/bazaar/index.html','ko/bazaar/admin/index.html','table.html','sample.jpg']
+required=['index.html','ko/bazaar/index.html','fr/bazaar/index.html','ko/bazaar/admin/index.html','table.html','sample.jpg','dashboard.html','dashboard.js','export/pdf.js','export/xlsx.js']
 for path in required:
     if not (root/path).is_file():raise SystemExit(f'Missing preview route: {path}')
 if (root/'CNAME').exists():raise SystemExit('Unexpected custom domain')
