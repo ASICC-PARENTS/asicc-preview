@@ -33,8 +33,7 @@ const newItem=(i=0)=>({id:"demo-"+(++nextId),included:true,ko:i?names[(i-1)%6][0
 let catalog=Array.from({length:24},(_,i)=>newItem(i+1)),catalogEdits=structuredClone(catalog);
 let event=null,savedEvent=null, pastEvent={name:'지난 예시 바자회',items:structuredClone(catalog),status:'closed'}, mode='catalog', selected=0, currentDetail;
 const sampleOrders=[
- {id:'EX-001',name:'예시 주문자 A',paid:false,note:'17시에 찾으러 가겠습니다.
-수령자는 가족입니다.',lines:[[0,17],[1,2]]},
+ {id:'EX-001',name:'예시 주문자 A',paid:false,note:'17시에 찾으러 가겠습니다.\n수령자는 가족입니다.',lines:[[0,17],[1,2]]},
  {id:'EX-002',name:'예시 주문자 B',paid:true,lines:[[0,3],[2,13]]},
  {id:'EX-003',name:'예시 주문자 C',paid:false,lines:[[1,5],[3,6]]}
 ];
