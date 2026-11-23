@@ -96,6 +96,32 @@ dashboard=dashboard.replace('<meta charset="utf-8">','<meta charset="utf-8"><met
 shutil.copy(tools/'dashboard.js',root/'public/dashboard.js')
 shutil.copytree(tools/'export',root/'public/export')
 
+# Build the PR's real administrator components behind a separate, mock-only URL.
+admin_component=root/'src/lib/bazaar/admin/Screen.astro'
+has_live_admin=admin_component.exists()
+if has_live_admin:
+    code=admin_component.read_text().replace("'bazaar/admin/'","'bazaar/test-admin/'").replace("+'/bazaar-export/'","+'/export/'")
+    code=code.replace('<head>',"""<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; object-src 'none'; form-action 'none'">""")
+    code=code.replace('</head>',f'<link rel="icon" href="{base}favicon.svg"></head>')
+    code=code.replace('<body data-page={screen}>',f'<body data-page={{screen}}><div style="padding:10px;text-align:center;background:#f5e6c6"><a href="{base}">미리보기 홈</a> · {ref} · <code>{commit}</code> · 예시 데이터 · 이메일 발송 없음</div>')
+    admin_component.write_text(code)
+    app=admin_component.with_name('app.js')
+    code=app.read_text().replace("from 'firebase/auth'","from '../api'").replace("replace(/admin\\/$/,'')","replace(/test-admin\\/$/,'')")
+    app.write_text(code)
+    for screen in ('main','products','orders','settlement'):
+        path=bazaar/'test-admin'/('index.astro' if screen=='main' else screen+'/index.astro')
+        path.parent.mkdir(parents=True,exist_ok=True)
+        relative='../../../../' if screen=='main' else '../../../../../'
+        path.write_text(f"""---
+import Screen from '{relative}lib/bazaar/admin/Screen.astro';
+import {{ langPaths, type Lang }} from '{relative}i18n/ui';
+
+export const getStaticPaths = langPaths;
+const lang = Astro.params.lang as Lang;
+---
+<Screen lang={{lang}} screen="{screen}" />
+""")
+
 for locale in ('ko','fr'):
     target=root/'public'/locale/'bazaar/admin'
     shutil.copytree(tools/'handoff',target)
@@ -108,10 +134,11 @@ for lang in ['', 'ko/', 'fr/']:
     target=routes/lang/'index.astro'
     target.parent.mkdir(parents=True,exist_ok=True)
     prefix=base+(lang or 'ko/')
+    test_link=f'<a href="{prefix}bazaar/test-admin/orders/">전화 주문·추가 구매 · 관리자 기능 미리보기</a>' if has_live_admin else ''
     target.write_text(f"""<!doctype html><html lang="{lang[:2] or 'ko'}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>ASICC 미리보기</title>
 <style>body{{font:17px system-ui;line-height:1.7;margin:40px auto;padding:0 16px;max-width:780px}}nav{{display:grid;gap:12px}}a{{color:#723346}}</style>
 <h1>ASICC 개발 미리보기</h1><p>{ref} · <code>{commit}</code> · 예시 데이터만 사용합니다.</p>
-<nav><a href="{base}dashboard.html">이전 관리자 시안</a>
+<nav>{test_link}<a href="{base}dashboard.html">이전 관리자 시안</a>
 <a href="{prefix}bazaar/admin/">승인 디자인 · 바자회 관리자</a><a href="{base}table.html">관리자 구조 시안 · 기본 상품 / 행사 / 주문·정산</a>
 <a href="{base}table.html#orders">업체별 발주 집계 시안 바로 보기</a>
 <a href="{base}ko/bazaar/?event=bazaar-preview-demo">바자회 배너 · 한국어</a><a href="{base}fr/bazaar/?event=bazaar-preview-demo">Bazar · Français</a>

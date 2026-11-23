@@ -3,6 +3,11 @@ from pathlib import Path
 root=Path(sys.argv[1])
 required=['index.html','ko/bazaar/index.html','fr/bazaar/index.html','ko/bazaar/admin/index.html','table.html','sample.jpg','dashboard.html','dashboard.js','export/pdf.js','export/xlsx.js']
 required += [f'{lang}/bazaar/admin/{page}.html' for lang in ('ko','fr') for page in ('index','products','orders','settlement')]
+if (root/'ko/bazaar/test-admin').exists():
+    required += [f'{lang}/bazaar/test-admin/{screen}index.html' for lang in ('ko','fr') for screen in ('','products/','orders/','settlement/')]
+    for path in required[-8:]:
+        if "connect-src 'none'" not in (root/path).read_text():
+            raise SystemExit(f'Mock administrator CSP missing: {path}')
 for path in required:
     if not (root/path).is_file():raise SystemExit(f'Missing preview route: {path}')
 if (root/'CNAME').exists():raise SystemExit('Unexpected custom domain')
