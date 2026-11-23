@@ -42,5 +42,57 @@ export async function adminAction(data:any) {
  }
 }
 export async function getShop(id:string){const event=id===closed.eventId?closed:active;return {serverNow:now(),event,products:event.status==='closed'?[]:items.map(p=>({...p,priceCents:p.retailCents,stockRemaining:20}))};}
-export async function createOrder(data:any){sessionStorage.setItem('asicc-preview-note',String(data.pickupNote||'').slice(0,500));return {id:order.id,token:'demo',orderRef:order.orderRef,totalCents:order.totalCents,iban:active.iban,beneficiary:active.beneficiary};}
-export async function buyerAction(){return {order:{...order,pickupNote:sessionStorage.getItem('asicc-preview-note')||''}};}
+type DemoOrder = {
+  orderRef: string;
+  totalCents: number;
+  pickupNote: string;
+  items: Array<{titleKo: string; titleFr: string; priceCents: number; qty: number}>;
+  transferReportedAt?: string;
+  canceledAt?: string;
+};
+
+const orderKey = (id: string, token: string) => `asicc-preview-order:${id}:${token}`;
+
+export async function createOrder(data: {
+  eventId: string;
+  consent: boolean;
+  pickupNote?: string;
+  items: Array<{id: string; qty: number}>;
+}) {
+  if (data.eventId !== active.eventId || active.status !== 'published' || !data.consent || !data.items.length) {
+    throw new Error('모의 주문을 접수할 수 없습니다. / Impossible de passer la commande fictive.');
+  }
+  const lines = data.items.map(({id, qty}) => {
+    const product = items.find(item => item.id === id && item.included && item.visible);
+    if (!product || !Number.isInteger(qty) || qty < 1) {
+      throw new Error('상품과 수량을 확인해 주세요. / Vérifiez les produits et les quantités.');
+    }
+    return {titleKo: product.titleKo, titleFr: product.titleFr, priceCents: product.retailCents, qty};
+  });
+  const id = crypto.randomUUID();
+  const token = crypto.randomUUID();
+  const orderRef = `DEMO-${id.slice(0, 8).toUpperCase()}`;
+  const totalCents = lines.reduce((total, item) => total + item.priceCents * item.qty, 0);
+  const demoOrder: DemoOrder = {
+    orderRef, totalCents, items: lines, pickupNote: String(data.pickupNote ?? '').trim().slice(0, 500),
+  };
+  // Keep mock order state in this tab, without retaining the buyer's contact information.
+  sessionStorage.setItem(orderKey(id, token), JSON.stringify(demoOrder));
+  return {id, token, orderRef, totalCents, iban: active.iban, beneficiary: active.beneficiary};
+}
+
+export async function buyerAction({id, token, action, ackNoTransfer}: {
+  id: string;
+  token: string;
+  action: 'view' | 'report' | 'cancel';
+  ackNoTransfer?: boolean;
+}) {
+  const key = orderKey(id, token);
+  const saved = sessionStorage.getItem(key);
+  if (!saved) throw new Error('모의 주문을 찾을 수 없습니다. / Commande fictive introuvable.');
+  const order: DemoOrder = JSON.parse(saved);
+  if (action === 'report' && !order.canceledAt) order.transferReportedAt ??= now();
+  if (action === 'cancel' && ackNoTransfer && !order.transferReportedAt) order.canceledAt ??= now();
+  if (action !== 'view') sessionStorage.setItem(key, JSON.stringify(order));
+  return {order};
+}
