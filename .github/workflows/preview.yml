@@ -1,0 +1,85 @@
+name: Update development preview
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number (leave empty when using commit)
+        type: string
+        required: false
+      commit:
+        description: Full 40-character commit SHA (leave empty when using PR)
+        type: string
+        required: false
+permissions: {}
+concurrency:
+  group: asicc-preview-pages
+  cancel-in-progress: false
+jobs:
+  build:
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Resolve source revision
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          COMMIT: ${{ inputs.commit }}
+        run: |
+          set -euo pipefail
+          if [[ "$PR" =~ ^[1-9][0-9]*$ && -z "$COMMIT" ]]; then
+            sha=$(gh api "repos/ASICC-PARENTS/-asicc-website/pulls/$PR" --jq .head.sha)
+            label="PR #$PR"
+          elif [[ "$COMMIT" =~ ^[0-9a-f]{40}$ && -z "$PR" ]]; then
+            sha=$(gh api "repos/ASICC-PARENTS/-asicc-website/commits/$COMMIT" --jq .sha)
+            label="Commit"
+          else
+            echo 'Specify one PR number or full commit SHA.' >&2
+            exit 1
+          fi
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "label=$label" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: ASICC-PARENTS/-asicc-website
+          ref: ${{ steps.source.outputs.sha }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Create sandboxed preview
+        env:
+          LABEL: ${{ steps.source.outputs.label }}
+          REVISION: ${{ steps.source.outputs.sha }}
+          ASTRO_TELEMETRY_DISABLED: '1'
+          SITE_URL: https://asicc-parents.github.io
+          BASE_PATH: /asicc-preview/
+        run: |
+          python prepare.py source "$LABEL" "$REVISION"
+          cd source
+          npm ci
+          npm run build
+          python ../verify.py dist
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: source/dist
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.publish.outputs.page_url }}
+    steps:
+      - name: Publish to the preview repository
+        id: publish
+        uses: actions/deploy-pages@v4

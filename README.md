@@ -1,2 +1,9 @@
-# asicc-preview
-ASICC Website Preview
+# ASICC 개발 미리보기
+
+GitHub Pages의 배포 원본을 **GitHub Actions**로 설정합니다. 커스텀 도메인은 지정하지 않습니다.
+
+**Actions → Update development preview → Run workflow**에서 PR 번호 또는 40자리 커밋 SHA 중 하나를 입력합니다. 바자회 PR #3을 표시하려면 PR 번호 3을 입력합니다.
+
+이 워크플로는 고정된 ASICC 소스 저장소에서 지정한 리비전을 읽습니다. 빌드 전용 사본에서 바자회 경로만 남기고 Firebase API를 모의 구현으로 바꿉니다. 엑셀형 화면은 별도의 디자인 시안입니다. 편집과 주문은 브라우저 메모리에서 모의 동작합니다. 페이지를 새로고침하면 초기화됩니다. 준비 스크립트가 읽는 소스 사본에는 보존할 작업물을 두지 마세요.
+
+운영 저장소와 운영 GitHub Pages 설정에는 변경을 적용하지 않습니다.
