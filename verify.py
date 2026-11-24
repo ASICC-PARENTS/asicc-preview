@@ -10,6 +10,13 @@ if (root/'ko/bazaar/test-admin').exists():
             raise SystemExit(f'Mock administrator CSP missing: {path}')
 for path in required:
     if not (root/path).is_file():raise SystemExit(f'Missing preview route: {path}')
+member=root/'member-management-test/index.html'
+if member.is_file():
+    source=member.read_text()
+    if "connect-src 'none'" not in source or "form-action 'none'" not in source:
+        raise SystemExit('Member preview isolation missing')
+    if '/asicc-preview/member-management-test/' not in (root/'index.html').read_text():
+        raise SystemExit('Member preview navigation missing')
 if (root/'CNAME').exists():raise SystemExit('Unexpected custom domain')
 for path in root.rglob('*'):
     if path.suffix not in ('.html','.js','.css'):continue
