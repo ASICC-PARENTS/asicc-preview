@@ -81,10 +81,18 @@ code=code.replace('<head>',"""<head>
 code=re.sub(r'<body[^>]*>',lambda m:m[0]+f'<div style="padding:10px;text-align:center;background:#f5e6c6"><a href="{base}">미리보기 홈</a> · {ref} · <code>{commit}</code> · 예시 데이터 / Démonstration</div>',code,count=1)
 layout.write_text(code)
 # Exclude the production public directory and permit only the preview image and the site favicon.
+member_preview=root/'public/member-management-test/index.html'
+member_html=member_preview.read_text() if member_preview.is_file() else None
 favicon=(root/'public/favicon.svg').read_bytes()
 shutil.rmtree(root/'public')
 (root/'public').mkdir()
 (root/'public/favicon.svg').write_bytes(favicon)
+if member_html is not None:
+    if "connect-src 'none'" not in member_html or "form-action 'none'" not in member_html:
+        raise ValueError('Member preview isolation missing')
+    target=root/'public/member-management-test/index.html'
+    target.parent.mkdir(parents=True,exist_ok=True)
+    target.write_text(member_html)
 shutil.copy(tools/'sample.jpg',root/'public/sample.jpg')
 table=(tools/'table.html').read_text().replace('href="/"','href="/asicc-preview/"')
 table=table.replace('<meta charset="utf-8">', '<meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><meta http-equiv="Content-Security-Policy" content="default-src \'self\'; connect-src \'none\'; style-src \'unsafe-inline\'; script-src \'unsafe-inline\'; img-src \'self\' data: blob:; form-action \'none\'">')
@@ -134,11 +142,12 @@ for lang in ['', 'ko/', 'fr/']:
     target=routes/lang/'index.astro'
     target.parent.mkdir(parents=True,exist_ok=True)
     prefix=base+(lang or 'ko/')
+    member_link=f'<a href="{base}member-management-test/">회원관리 독립 테스트</a>' if member_html is not None else ''
     test_link=f'<a href="{prefix}bazaar/test-admin/orders/">전화 주문·추가 구매 · 관리자 기능 미리보기</a>' if has_live_admin else ''
     target.write_text(f"""<!doctype html><html lang="{lang[:2] or 'ko'}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>ASICC 미리보기</title>
 <style>body{{font:17px system-ui;line-height:1.7;margin:40px auto;padding:0 16px;max-width:780px}}nav{{display:grid;gap:12px}}a{{color:#723346}}</style>
 <h1>ASICC 개발 미리보기</h1><p>{ref} · <code>{commit}</code> · 예시 데이터만 사용합니다.</p>
-<nav>{test_link}<a href="{base}dashboard.html">이전 관리자 시안</a>
+<nav>{member_link}{test_link}<a href="{base}dashboard.html">이전 관리자 시안</a>
 <a href="{prefix}bazaar/admin/">승인 디자인 · 바자회 관리자</a><a href="{base}table.html">관리자 구조 시안 · 기본 상품 / 행사 / 주문·정산</a>
 <a href="{base}table.html#orders">업체별 발주 집계 시안 바로 보기</a>
 <a href="{base}ko/bazaar/?event=bazaar-preview-demo">바자회 배너 · 한국어</a><a href="{base}fr/bazaar/?event=bazaar-preview-demo">Bazar · Français</a>
